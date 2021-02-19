@@ -1,16 +1,20 @@
 package ink.rainbowbridge.yggdrasil;
 
+import ink.rainbowbridge.yggdrasil.utils.UpdateItemUtil;
 import io.izzel.taboolib.loader.Plugin;
 import io.izzel.taboolib.loader.PluginBoot;
 import io.izzel.taboolib.module.config.TConfig;
 import io.izzel.taboolib.module.inject.TInject;
 import io.izzel.taboolib.module.locale.logger.TLogger;
 import io.izzel.taboolib.util.item.Items;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.File;
 import java.util.HashMap;
@@ -37,6 +41,8 @@ public class Yggdrasil extends Plugin {
     public static void ReloadItems() {
         items = new HashMap<>();
         String[] dir = getDir().list();
+        //没有文件时不执行操作
+        if (dir != null){
         for (String str : dir) {
             try {
                 if (str.endsWith(".yml")) {
@@ -56,8 +62,9 @@ public class Yggdrasil extends Plugin {
                         }
                     }
                 }
-            }catch (Exception ex){
-                getLogger().error("加载物品配置出现错误: "+str);
+            }catch (Exception ex) {
+                getLogger().error("加载物品配置出现错误: " + str);
+            }
             }
         }
     }
@@ -74,6 +81,16 @@ public class Yggdrasil extends Plugin {
         long time = System.currentTimeMillis();
         ReloadItems();
         getLogger().info("载入完成，耗时: &8"+(System.currentTimeMillis()-time)+"ms");
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+            if (isSyncItem()){
+                for(Player p : Bukkit.getOnlinePlayers()){
+                    UpdateItemUtil.update(p);
+                }
+            }
+            }
+        }.runTaskTimer(getPlugin(),200L,config.getInt("SyncItem.Period")*20);
     }
 
     @Override
@@ -106,5 +123,13 @@ public class Yggdrasil extends Plugin {
      */
     public static void send(CommandSender sender, String str){
         sender.sendMessage(ChatColor.translateAlternateColorCodes('&',config.getString("Partly-Prefix","&7&l[&f&lYggdrasil&7&l] &7")+str));
+    }
+
+    /**
+     * 是否同步物品
+     * @return boolean
+     */
+    public static boolean isSyncItem(){
+        return config.getBoolean("SyncItem.Enable",true);
     }
 }

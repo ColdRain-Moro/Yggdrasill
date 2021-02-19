@@ -1,3 +1,6 @@
 PAPI-Replace: true
 Silent-Loading: false
 Partly-Prefix: '&7&l[&f&lYggdrasil&7&l] &7'
+SyncItem:
+  Enable: true
+  Period: 5
